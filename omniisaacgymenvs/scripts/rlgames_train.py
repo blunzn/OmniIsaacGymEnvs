@@ -42,6 +42,11 @@ from omniisaacgymenvs.utils.rlgames.rlgames_utils import RLGPUAlgoObserver, RLGP
 from omniisaacgymenvs.utils.task_util import initialize_task
 from rl_games.common import env_configurations, vecenv
 from rl_games.torch_runner import Runner
+from rl_games.algos_torch import model_builder
+# from omniisaacgymenvs.learning import amp_continuous
+# from omniisaacgymenvs.learning import amp_players
+# from omniisaacgymenvs.learning import amp_models
+# from omniisaacgymenvs.learning import amp_network_builder
 
 
 class RLGTrainer:
@@ -65,6 +70,10 @@ class RLGTrainer:
 
         # create runner and set the settings
         runner = Runner(RLGPUAlgoObserver())
+        # runner.algo_factory.register_builder('amp_continuous', lambda **kwargs : amp_continuous.AMPAgent(**kwargs))
+        # runner.player_factory.register_builder('amp_continuous', lambda **kwargs : amp_players.AMPPlayerContinuous(**kwargs))
+        # model_builder.register_model('continuous_amp', lambda network, **kwargs : amp_models.ModelAMPContinuous(network))
+        # model_builder.register_network('amp', lambda **kwargs : amp_network_builder.AMPBuilder())
         runner.load(self.rlg_config_dict)
         runner.reset()
 

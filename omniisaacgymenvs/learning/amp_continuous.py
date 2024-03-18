@@ -32,7 +32,7 @@ from rl_games.common import a2c_common
 from rl_games.common import schedulers
 from rl_games.common import vecenv
 
-from isaacgymenvs.utils.torch_jit_utils import to_torch
+from omniisaacgymenvs.tasks.amp.utils_amp.amp_torch_utils import to_torch
 
 import time
 from datetime import datetime
@@ -41,8 +41,8 @@ from torch import optim
 import torch 
 from torch import nn
 
-import isaacgymenvs.learning.replay_buffer as replay_buffer
-import isaacgymenvs.learning.common_agent as common_agent 
+import omniisaacgymenvs.learning.replay_buffer as replay_buffer
+import omniisaacgymenvs.learning.common_agent as common_agent 
 
 from tensorboardX import SummaryWriter
 

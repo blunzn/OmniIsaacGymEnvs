@@ -29,9 +29,10 @@
 
 import torch
 import numpy as np
+from omni.isaac.core.utils.torch.rotations import *
 
-from isaacgymenvs.utils.torch_jit_utils import quat_mul, quat_conjugate, quat_from_angle_axis, \
-    to_torch, get_axis_params, torch_rand_float, tensor_clamp  
+def to_torch(x, dtype=torch.float, device='cuda:0', requires_grad=False):
+    return torch.tensor(x, dtype=dtype, device=device, requires_grad=requires_grad)
 
 @torch.jit.script
 def my_quat_rotate(q, v):
@@ -149,9 +150,9 @@ def slerp(q0, q1, t):
     cos_half_theta = torch.unsqueeze(cos_half_theta, dim=-1)
 
     half_theta = torch.acos(cos_half_theta);
-    sin_half_theta = torch.sqrt(1.0 - cos_half_theta * cos_half_theta);
+    sin_half_theta = torch.sqrt(1.0 - cos_half_theta * cos_half_theta)
 
-    ratioA = torch.sin((1 - t) * half_theta) / sin_half_theta;
+    ratioA = torch.sin((1 - t) * half_theta) / sin_half_theta
     ratioB = torch.sin(t * half_theta) / sin_half_theta; 
     
     new_q_x = ratioA * q0[..., qx:qx+1] + ratioB * q1[..., qx:qx+1]

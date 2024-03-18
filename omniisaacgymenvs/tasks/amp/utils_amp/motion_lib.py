@@ -33,9 +33,10 @@ import yaml
 from ..poselib.poselib.skeleton.skeleton3d import SkeletonMotion
 from ..poselib.poselib.core.rotation3d import *
 
-from isaacgymenvs.utils.torch_jit_utils import to_torch, slerp, quat_to_exp_map, quat_to_angle_axis, normalize_angle
+from omni.isaac.core.utils.torch import normalize_angle
+from omniisaacgymenvs.tasks.amp.utils_amp.amp_torch_utils import to_torch
 
-from isaacgymenvs.tasks.amp.humanoid_amp_base import DOF_BODY_IDS, DOF_OFFSETS
+from omniisaacgymenvs.tasks.amp.humanoid_amp_base import DOF_BODY_IDS, DOF_OFFSETS
 
 
 class MotionLib():

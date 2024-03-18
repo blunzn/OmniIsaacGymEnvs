@@ -16,6 +16,21 @@
             ]
         }, 
         {
+            "name": "rlgames_train AMP",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/omniisaacgymenvs/scripts/rlgames_train.py",
+            "console": "integratedTerminal",
+            "env": {
+                "CARB_APP_PATH": "${workspaceFolder}/app/kit",
+                "ISAAC_PATH": "${workspaceFolder}/app",
+                "EXP_PATH": "${workspaceFolder}/app/apps",
+                "PYTHONPATH": "${workspaceFolder}/app/site"
+            },
+            "python": "${workspaceFolder}/app/kit/python/python.exe",
+            "args": "task=HumanoidAMP headless=False num_envs=2"
+        },
+        {
             "name": "rlgames_train",
             "type": "python",
             "request": "launch",
@@ -28,7 +43,8 @@
                 "PYTHONPATH": "${workspaceFolder}/app/site"
             },
             "python": "${workspaceFolder}/app/kit/python/python.exe",
-            "args": "task=HumanoidAMP headless=False"
+            "justMyCode": false,
+            "args": "task=Humanoid headless=True num_envs=2"
         },
         {
             "name": "Python: Current File",
