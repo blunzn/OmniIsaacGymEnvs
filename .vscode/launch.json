@@ -28,7 +28,8 @@
                 "PYTHONPATH": "${workspaceFolder}/app/site"
             },
             "python": "${workspaceFolder}/app/kit/python/python.exe",
-            "args": "task=HumanoidAMP headless=False num_envs=2"
+            "justMyCode": false,
+            "args": "task=HumanoidAMP headless=True num_envs=2048"
         },
         {
             "name": "rlgames_train",
@@ -44,7 +45,7 @@
             },
             "python": "${workspaceFolder}/app/kit/python/python.exe",
             "justMyCode": false,
-            "args": "task=Humanoid headless=True num_envs=2"
+            "args": "task=Humanoid headless=True num_envs=1024"
         },
         {
             "name": "Python: Current File",

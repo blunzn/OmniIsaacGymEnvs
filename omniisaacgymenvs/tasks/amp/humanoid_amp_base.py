@@ -29,6 +29,7 @@
 
 import numpy as np
 import os
+from omniisaacgymenvs.robots.articulations.humanoid import Humanoid
 import torch
 import omni.kit.commands
 from omni.isaac.core.utils.extensions import enable_extension
@@ -75,21 +76,18 @@ class HumanoidAMPBase(RLTask):
         self.debug_viz = self._task_cfg["env"]["enableDebugVis"]
         self.camera_follow = self._task_cfg["env"].get("cameraFollow", False)
         
-        self.plane_static_friction = self._task_cfg["env"]["plane"]["staticFriction"]
-        self.plane_dynamic_friction = self._task_cfg["env"]["plane"]["dynamicFriction"]
-        self.plane_restitution = self._task_cfg["env"]["plane"]["restitution"]
+        self._plane_static_friction = self._task_cfg["env"]["plane"]["staticFriction"]
+        self._plane_dynamic_friction = self._task_cfg["env"]["plane"]["dynamicFriction"]
+        self._plane_restitution = self._task_cfg["env"]["plane"]["restitution"]
 
-        self.max_episode_length = self._task_cfg["env"]["episodeLength"]
+        self._max_episode_length = self._task_cfg["env"]["episodeLength"]
         self._local_root_obs = self._task_cfg["env"]["localRootObs"]
         self._contact_bodies = self._task_cfg["env"]["contactBodies"]
         self._termination_height = self._task_cfg["env"]["terminationHeight"]
         self._enable_early_termination = self._task_cfg["env"]["enableEarlyTermination"]
 
         # # get gym GPU state tensors
-        # actor_root_state = self.gym.acquire_actor_root_state_tensor(self.sim)
-        # dof_state_tensor = self.gym.acquire_dof_state_tensor(self.sim)
         # sensor_tensor = self.gym.acquire_force_sensor_tensor(self.sim)
-        # rigid_body_state = self.gym.acquire_rigid_body_state_tensor(self.sim)
         # contact_force_tensor = self.gym.acquire_net_contact_force_tensor(self.sim)
 
         # sensors_per_env = 2
@@ -98,33 +96,13 @@ class HumanoidAMPBase(RLTask):
         # dof_force_tensor = self.gym.acquire_dof_force_tensor(self.sim)
         # self.dof_force_tensor = gymtorch.wrap_tensor(dof_force_tensor).view(self.num_envs, self.num_dof)
 
-        # self.gym.refresh_dof_state_tensor(self.sim)
-        # self.gym.refresh_actor_root_state_tensor(self.sim)
-        # self.gym.refresh_rigid_body_state_tensor(self.sim)
-        # self.gym.refresh_net_contact_force_tensor(self.sim)
+       
 
-        # self._root_states = gymtorch.wrap_tensor(actor_root_state)
-        # self._initial_root_states = self._root_states.clone()
-        # self._initial_root_states[:, 7:13] = 0
-
-        # # create some wrapper tensors for different slices
-        # self._dof_state = gymtorch.wrap_tensor(dof_state_tensor)
-        # self._dof_pos = self._dof_state.view(self.num_envs, self.num_dof, 2)[..., 0]
-        # self._dof_vel = self._dof_state.view(self.num_envs, self.num_dof, 2)[..., 1]
-
-        # self._initial_dof_pos = torch.zeros_like(self._dof_pos, device=self.device, dtype=torch.float)
         # right_shoulder_x_handle = self.gym.find_actor_dof_handle(self.envs[0], self.humanoid_handles[0], "right_shoulder_x")
         # left_shoulder_x_handle = self.gym.find_actor_dof_handle(self.envs[0], self.humanoid_handles[0], "left_shoulder_x")
         # self._initial_dof_pos[:, right_shoulder_x_handle] = 0.5 * np.pi
         # self._initial_dof_pos[:, left_shoulder_x_handle] = -0.5 * np.pi
 
-        # self._initial_dof_vel = torch.zeros_like(self._dof_vel, device=self.device, dtype=torch.float)
-        
-        # self._rigid_body_state = gymtorch.wrap_tensor(rigid_body_state)
-        # self._rigid_body_pos = self._rigid_body_state.view(self.num_envs, self.num_bodies, 13)[..., 0:3]
-        # self._rigid_body_rot = self._rigid_body_state.view(self.num_envs, self.num_bodies, 13)[..., 3:7]
-        # self._rigid_body_vel = self._rigid_body_state.view(self.num_envs, self.num_bodies, 13)[..., 7:10]
-        # self._rigid_body_ang_vel = self._rigid_body_state.view(self.num_envs, self.num_bodies, 13)[..., 10:13]
         # self._contact_forces = gymtorch.wrap_tensor(contact_force_tensor).view(self.num_envs, self.num_bodies, 3)
         
         # self._terminate_buf = torch.ones(self.num_envs, device=self.device, dtype=torch.long)
@@ -145,46 +123,43 @@ class HumanoidAMPBase(RLTask):
         self.create_views(scene)
 
     def create_views(self, scene):
-        self._humanoids = ArticulationView(
-            prim_paths_expr="/World/envs/.*/Humanoid/pelvis", name="robot_view", reset_xform_properties=False
+        self._robots = ArticulationView(
+            prim_paths_expr="/World/envs/.*/Humanoid/pelvis/torso", name="robot_view", reset_xform_properties=False
         )
-        scene.add(self._humanoids)
+        scene.add(self._robots)
         
     def create_robot(self):
-        # import from MJCF
-        # setting up import configuration:
-        status, import_config = omni.kit.commands.execute("MJCFCreateImportConfig")
-        import_config.set_fix_base(False)
-        import_config.set_make_default_prim(False)
+        # # import from MJCF
+        # # setting up import configuration:
+        # status, import_config = omni.kit.commands.execute("MJCFCreateImportConfig")
+        # import_config.set_fix_base(False)
+        # import_config.set_make_default_prim(False)
+
+        # asset_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../assets/')
+        # asset_file = "mjcf/amp_humanoid.xml"
+        # if "asset" in self._task_cfg["env"]:
+        #     asset_file = self._task_cfg["env"]["asset"].get("assetFileName", asset_file)
+        # # import MJCF
+        # prim_path = self.default_zero_env_path + "/Humanoid"
+
+        # omni.kit.commands.execute(
+        #     "MJCFCreateAsset",
+        #     mjcf_path=asset_root + asset_file,
+        #     import_config=import_config,
+        #     prim_path=prim_path
+        # )
+
+        # robot = Robot(
+        #     prim_path=prim_path, name="Humanoid", translation=self._robot_spawn_pos
+        # )
 
         asset_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../assets/')
-        asset_file = "mjcf/amp_humanoid.xml"
-        if "asset" in self._task_cfg["env"]:
-            asset_file = self._task_cfg["env"]["asset"].get("assetFileName", asset_file)
-        # import MJCF
+        asset_file = "amp/humanoid_amp_instanceable.usd"
+        
         prim_path = self.default_zero_env_path + "/Humanoid"
-
-        omni.kit.commands.execute(
-            "MJCFCreateAsset",
-            mjcf_path=asset_root + asset_file,
-            import_config=import_config,
-            prim_path=prim_path
-        )
-
-        # mjcf_interface = _mjcf.acquire_mjcf_interface()
-
-        # # setup config params
-        # import_config = _mjcf.ImportConfig()
-        # import_config.fix_base = True
-
-        # # parse and import file
-        # mjcf_interface.create_asset_mjcf(asset_root + asset_file, prim_path, import_config)
-
-        robot = Robot(
-            prim_path=prim_path, name="Humanoid", translation=self._robot_spawn_pos
-        )
+        robot = Humanoid(prim_path=prim_path, usd_path=asset_root+asset_file, name="Humanoid")
         self._sim_config.apply_articulation_settings(
-            "Humanoid", get_prim_at_path(prim_path), self._sim_config.parse_actor_config("Humanoid")
+            "Humanoid", get_prim_at_path(prim_path), self._sim_config.parse_actor_config("HumanoidAMP")
         )
 
     def get_obs_size(self):
@@ -193,11 +168,43 @@ class HumanoidAMPBase(RLTask):
     def get_action_size(self):
         return NUM_ACTIONS
 
-#     def reset_idx(self, env_ids):
-#         self._reset_actors(env_ids)
-#         self._refresh_sim_tensors()
-#         self._compute_observations(env_ids)
-#         return
+    def post_reset(self):
+        self.num_dof = self._robots.num_dof
+        self._key_body_ids =  torch.tensor(
+            [self._robots._body_indices[j] for j in KEY_BODY_NAMES], device=self._device, dtype=torch.long
+        )
+
+        self.initial_root_pos, self.initial_root_rot = self._robots.get_world_poses()
+        self.initial_dof_pos = self._robots.get_joint_positions()
+
+        # initialize some data used later on
+        self.start_rotation = torch.tensor([1, 0, 0, 0], device=self._device, dtype=torch.float32)
+        self.up_vec = torch.tensor([0, 0, 1], dtype=torch.float32, device=self._device).repeat((self.num_envs, 1))
+        self.heading_vec = torch.tensor([1, 0, 0], dtype=torch.float32, device=self._device).repeat((self.num_envs, 1))
+        self.inv_start_rot = quat_conjugate(self.start_rotation).repeat((self.num_envs, 1))
+
+        self.basis_vec0 = self.heading_vec.clone()
+        self.basis_vec1 = self.up_vec.clone()
+
+        self.targets = torch.tensor([1000, 0, 0], dtype=torch.float32, device=self._device).repeat((self.num_envs, 1))
+        self.target_dirs = torch.tensor([1, 0, 0], dtype=torch.float32, device=self._device).repeat((self.num_envs, 1))
+        self.dt = 1.0 / 60.0
+        self.potentials = torch.tensor([-1000.0 / self.dt], dtype=torch.float32, device=self._device).repeat(
+            self.num_envs
+        )
+        self.prev_potentials = self.potentials.clone()
+
+        self.actions = torch.zeros((self.num_envs, self.num_actions), device=self._device)
+
+        # randomize all envs
+        indices = torch.arange(self._robots.count, dtype=torch.int64, device=self._device)
+        self.reset_idx(indices)
+
+    def reset_idx(self, env_ids):
+        # self._reset_actors(env_ids)
+        # self._refresh_sim_tensors()
+        # self._compute_observations(env_ids)
+        return
 
 #     def set_char_color(self, col):
 #         for i in range(self.num_envs):
@@ -208,15 +215,6 @@ class HumanoidAMPBase(RLTask):
 #                 self.gym.set_rigid_body_color(env_ptr, handle, j, gymapi.MESH_VISUAL,
 #                                               gymapi.Vec3(col[0], col[1], col[2]))
 
-#         return
-
-#     def _create_ground_plane(self):
-#         plane_params = gymapi.PlaneParams()
-#         plane_params.normal = gymapi.Vec3(0.0, 0.0, 1.0)
-#         plane_params.static_friction = self.plane_static_friction
-#         plane_params.dynamic_friction = self.plane_dynamic_friction
-#         plane_params.restitution = self.plane_restitution
-#         self.gym.add_ground(self.sim, plane_params)
 #         return
 
 #     def _create_envs(self, num_envs, spacing, num_per_row):
@@ -438,16 +436,6 @@ class HumanoidAMPBase(RLTask):
 #             self._update_debug_viz()
 
 #         return
-
-#     def _build_key_body_ids_tensor(self, env_ptr, actor_handle):
-#         body_ids = []
-#         for body_name in KEY_BODY_NAMES:
-#             body_id = self.gym.find_actor_rigid_body_handle(env_ptr, actor_handle, body_name)
-#             assert(body_id != -1)
-#             body_ids.append(body_id)
-
-#         body_ids = to_torch(body_ids, device=self.device, dtype=torch.long)
-#         return body_ids
 
 #     def _build_contact_body_ids_tensor(self, env_ptr, actor_handle):
 #         body_ids = []

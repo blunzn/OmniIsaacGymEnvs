@@ -58,10 +58,6 @@ class HumanoidAMP(HumanoidAMPBase):
         self._reset_ref_env_ids = []
 
         super().__init__(name, sim_config, env, offset)
-        
-        motion_file = sim_config.task_config['env'].get('motion_file', "amp_humanoid_backflip.npy")
-        motion_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../assets/amp/motions/" + motion_file)
-        # self._load_motion(motion_file_path)
 
         # self.num_amp_obs = self._num_amp_obs_steps * NUM_AMP_OBS_PER_STEP
 
@@ -75,6 +71,17 @@ class HumanoidAMP(HumanoidAMPBase):
 
         return
 
+    def post_reset(self):
+        super().post_reset()
+
+        motion_file = self._sim_config.task_config['env'].get('motion_file', "amp_humanoid_backflip.npy")
+        motion_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../assets/amp/motions/" + motion_file)
+        self._load_motion(motion_file_path)
+
+    def set_up_scene(self, scene) -> None:
+        super().set_up_scene(scene)
+        return
+    
     def post_physics_step(self):
         # super().post_physics_step()
         
@@ -127,17 +134,17 @@ class HumanoidAMP(HumanoidAMPBase):
 #         self._amp_obs_demo_buf = torch.zeros((num_samples, self._num_amp_obs_steps, NUM_AMP_OBS_PER_STEP), device=self.device, dtype=torch.float)
 #         return
 
-#     def _load_motion(self, motion_file):
-#         self._motion_lib = MotionLib(motion_file=motion_file, 
-#                                      num_dofs=self.num_dof,
-#                                      key_body_ids=self._key_body_ids.cpu().numpy(), 
-#                                      device=self.device)
-#         return
+    def _load_motion(self, motion_file):
+        self._motion_lib = MotionLib(motion_file=motion_file, 
+                                     num_dofs=self.num_dof,
+                                     key_body_ids=self._key_body_ids.cpu().numpy(), 
+                                     device=self.device)
+        return
 
-#     def reset_idx(self, env_ids):
-#         super().reset_idx(env_ids)
-#         self._init_amp_obs(env_ids)
-#         return
+    def reset_idx(self, env_ids):
+        super().reset_idx(env_ids)
+        # self._init_amp_obs(env_ids)
+        return
 
 #     def _reset_actors(self, env_ids):
 #         if (self._state_init == HumanoidAMP.StateInit.Default):
