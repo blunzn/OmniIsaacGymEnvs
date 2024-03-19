@@ -32,11 +32,12 @@ import os
 from omniisaacgymenvs.robots.articulations.humanoid import Humanoid
 import torch
 import omni.kit.commands
-from omni.isaac.core.utils.extensions import enable_extension
+# from omni.isaac.core.utils.extensions import enable_extension
 # from pxr import UsdLux, Sdf, Gf, UsdPhysics, PhysicsSchemaTools
-enable_extension("omni.importer.mjcf")
+# enable_extension("omni.importer.mjcf")
 from omni.isaac.core.articulations import ArticulationView
 from omni.isaac.core.utils.prims import get_prim_at_path
+from omni.isaac.core.utils.torch import quat_conjugate
 from omni.isaac.core.robots.robot import Robot
 from omniisaacgymenvs.tasks.base.rl_task import RLTask
 
